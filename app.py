@@ -94,7 +94,7 @@ class FileProcessor:
     def process_excel_file(cls, uploaded_file) -> Tuple[pd.DataFrame, int]:
         """Process Excel file and detect header row."""
         # Read Excel file without assuming header position
-        df = pd.read_excel(uploaded_file, header=None)
+        df = pd.read_excel(uploaded_file, header=None, dtype=str)
         
         # Detect header row
         header_row = cls.detect_header_row(df)
