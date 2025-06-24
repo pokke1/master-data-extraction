@@ -100,7 +100,7 @@ class FileProcessor:
         header_row = cls.detect_header_row(df)
         
         # Re-read with detected header
-        df_with_header = pd.read_excel(uploaded_file, header=header_row)
+        df_with_header = pd.read_excel(uploaded_file, header=header_row, dtype=str)
         
         # Clean column names
         df_with_header.columns = [str(col).strip() for col in df_with_header.columns]
