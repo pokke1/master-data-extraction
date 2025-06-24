@@ -8,10 +8,8 @@ import logging
 import io
 import chardet
 from dotenv import load_dotenv
-
 # Load environment variables from .env file
 load_dotenv()
-
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -100,7 +98,7 @@ class FileProcessor:
         header_row = cls.detect_header_row(df)
         
         # Re-read with detected header
-        df_with_header = pd.read_excel(uploaded_file, header=header_row, dtype=str)
+        df_with_header = pd.read_excel(uploaded_file, header=header_row,dtype=str)
         
         # Clean column names
         df_with_header.columns = [str(col).strip() for col in df_with_header.columns]
@@ -277,6 +275,75 @@ class FieldManager:
                 "Salary": "Salary or compensation amounts"
             }
         }
+
+def create_mapped_dataframe(df: pd.DataFrame, mapping: Dict[str, str]) -> pd.DataFrame:
+    """
+    Create a new dataframe with only the mapped columns, renamed to required field names.
+    
+    Args:
+        df: Original dataframe
+        mapping: Dictionary mapping required fields to column names
+        
+    Returns:
+        New dataframe with mapped columns
+    """
+    mapped_data = {}
+    
+    for required_field, column_name in mapping.items():
+        if column_name and column_name in df.columns:
+            mapped_data[required_field] = df[column_name]
+        else:
+            # Create empty column if mapping is missing
+            mapped_data[required_field] = pd.Series([None] * len(df))
+    
+    return pd.DataFrame(mapped_data)
+
+def create_excel_download(df: pd.DataFrame) -> bytes:
+    """
+    Create an Excel file in memory for download.
+    
+    Args:
+        df: Dataframe to export
+        
+    Returns:
+        Excel file as bytes
+    """
+    output = io.BytesIO()
+    
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, sheet_name='Mapped Data', index=False)
+        
+        # Get the workbook and worksheet
+        workbook = writer.book
+        worksheet = writer.sheets['Mapped Data']
+        
+        # Auto-adjust column widths
+        for column in worksheet.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            
+            adjusted_width = min(max_length + 2, 50)  # Cap at 50 characters
+            worksheet.column_dimensions[column_letter].width = adjusted_width
+        
+        # Style the header row
+        from openpyxl.styles import Font, PatternFill
+        
+        header_font = Font(bold=True, color="FFFFFF")
+        header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+        
+        for cell in worksheet[1]:
+            cell.font = header_font
+            cell.fill = header_fill
+    
+    output.seek(0)
+    return output.read()
 
 def process_uploaded_file(uploaded_file) -> Tuple[pd.DataFrame, int, str]:
     """Process uploaded file based on its type."""
@@ -542,7 +609,7 @@ def main():
                 st.dataframe(final_df, use_container_width=True)
                 
                 # Export options
-                col1, col2 = st.columns(2)
+                col1, col2, col3 = st.columns(3)
                 
                 with col1:
                     if st.button("📥 Export Mapping as JSON", type="secondary"):
@@ -568,28 +635,149 @@ def main():
                         mime="application/json"
                     )
                 
+                with col3:
+                    # Export mapped dataframe
+                    st.subheader("📊 Download Mapped Data")
+                    
+                    # Create mapped dataframe
+                    mapped_df = create_mapped_dataframe(df, corrected_mapping)
+                    
+                    if not mapped_df.empty:
+                        # Choose export format
+                        export_format = st.selectbox(
+                            "Export Format",
+                            ["Excel (.xlsx)", "CSV (.csv)"],
+                            key="export_format"
+                        )
+                        
+                        if export_format == "Excel (.xlsx)":
+                            # Create Excel file
+                            excel_buffer = create_excel_download(mapped_df)
+                            st.download_button(
+                                label="📊 Download Excel",
+                                data=excel_buffer,
+                                file_name="mapped_data.xlsx",
+                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                            )
+                        else:
+                            # Create CSV file
+                            csv_data = mapped_df.to_csv(index=False)
+                            st.download_button(
+                                label="📊 Download CSV",
+                                data=csv_data,
+                                file_name="mapped_data.csv",
+                                mime="text/csv"
+                            )
+                        
+                        # Show download statistics
+                        total_rows = len(mapped_df)
+                        mapped_columns = len([col for col in corrected_mapping.values() if col is not None])
+                        st.caption(f"📈 {total_rows:,} rows × {mapped_columns} mapped columns")
+                    else:
+                        st.warning("No data available for download")
+                
                 # Show mapped data preview
                 st.header("7. Mapped Data Preview")
-                mapped_data = {}
-                for field, column in corrected_mapping.items():
-                    if column:
-                        mapped_data[field] = df[column].head(5).tolist()
-                    else:
-                        mapped_data[field] = ["Not mapped"] * 5
                 
-                preview_df = pd.DataFrame(mapped_data)
-                st.dataframe(preview_df, use_container_width=True)
+                # Create and display the mapped dataframe
+                mapped_df = create_mapped_dataframe(df, corrected_mapping)
                 
-                # Statistics
+                if not mapped_df.empty:
+                    col1, col2 = st.columns([2, 1])
+                    
+                    with col1:
+                        st.subheader("📊 Final Mapped Data")
+                        st.dataframe(mapped_df.head(10), use_container_width=True)
+                        
+                        if len(mapped_df) > 10:
+                            st.caption(f"Showing first 10 rows of {len(mapped_df):,} total rows")
+                    
+                    with col2:
+                        st.subheader("📈 Data Summary")
+                        
+                        # Show summary statistics for each mapped column
+                        for field, column in corrected_mapping.items():
+                            if column and column in df.columns:
+                                non_null_count = mapped_df[field].notna().sum()
+                                total_count = len(mapped_df)
+                                completeness = (non_null_count / total_count * 100) if total_count > 0 else 0
+                                
+                                st.metric(
+                                    label=field,
+                                    value=f"{completeness:.1f}%",
+                                    help=f"{non_null_count:,} of {total_count:,} records have data"
+                                )
+                
+                else:
+                    st.warning("No mapped data available to preview")
+                
+                # Statistics and insights
+                st.header("8. Data Quality Insights")
+                
+                col1, col2, col3, col4 = st.columns(4)
+                
                 mapped_count = sum(1 for v in corrected_mapping.values() if v is not None)
                 total_count = len(corrected_mapping)
                 mapping_percentage = (mapped_count / total_count) * 100 if total_count > 0 else 0
                 
-                st.metric(
-                    "Mapping Completion", 
-                    f"{mapping_percentage:.1f}%", 
-                    f"{mapped_count}/{total_count} fields mapped"
-                )
+                with col1:
+                    st.metric(
+                        "Mapping Completion", 
+                        f"{mapping_percentage:.1f}%", 
+                        f"{mapped_count}/{total_count} fields"
+                    )
+                
+                with col2:
+                    total_records = len(mapped_df) if not mapped_df.empty else 0
+                    st.metric("Total Records", f"{total_records:,}")
+                
+                with col3:
+                    if not mapped_df.empty:
+                        # Calculate overall data completeness
+                        total_cells = mapped_df.size
+                        non_null_cells = mapped_df.notna().sum().sum()
+                        data_completeness = (non_null_cells / total_cells * 100) if total_cells > 0 else 0
+                        st.metric("Data Completeness", f"{data_completeness:.1f}%")
+                    else:
+                        st.metric("Data Completeness", "0%")
+                
+                with col4:
+                    if not mapped_df.empty:
+                        # Count complete rows (rows with all fields filled)
+                        complete_rows = mapped_df.dropna().shape[0]
+                        complete_percentage = (complete_rows / len(mapped_df) * 100) if len(mapped_df) > 0 else 0
+                        st.metric("Complete Records", f"{complete_percentage:.1f}%")
+                    else:
+                        st.metric("Complete Records", "0%")
+                
+                # Data quality warnings
+                if not mapped_df.empty:
+                    st.subheader("🔍 Data Quality Notes")
+                    
+                    warnings = []
+                    
+                    # Check for unmapped fields
+                    unmapped_fields = [field for field, column in corrected_mapping.items() if column is None]
+                    if unmapped_fields:
+                        warnings.append(f"⚠️ **Unmapped fields**: {', '.join(unmapped_fields)}")
+                    
+                    # Check for low data completeness
+                    for field, column in corrected_mapping.items():
+                        if column and column in df.columns:
+                            completeness = (mapped_df[field].notna().sum() / len(mapped_df) * 100)
+                            if completeness < 50:
+                                warnings.append(f"⚠️ **Low data quality**: {field} ({completeness:.1f}% complete)")
+                    
+                    # Check for potential duplicates
+                    if len(mapped_df) > len(mapped_df.drop_duplicates()):
+                        duplicate_count = len(mapped_df) - len(mapped_df.drop_duplicates())
+                        warnings.append(f"ℹ️ **Potential duplicates**: {duplicate_count} duplicate records found")
+                    
+                    if warnings:
+                        for warning in warnings:
+                            st.markdown(warning)
+                    else:
+                        st.success("✅ No data quality issues detected")
                 
         except Exception as e:
             st.error(f"Error processing file: {e}")

@@ -11,7 +11,8 @@ An intelligent Streamlit application that uses Azure OpenAI to automatically map
 - **Flexible Input**: Handles various layouts, naming conventions, and column orders
 - **Interactive Validation**: Allows users to review and correct AI suggestions
 - **Data Preview**: Shows sample data and mapping results for transparency
-- **Export Functionality**: Download mappings and field configurations as JSON
+- **Export Functionality**: Download mappings, field configurations, and final datasets
+- **Data Quality Insights**: Completeness metrics and quality warnings
 - **Preset Management**: Built-in presets for common use cases
 - **Encoding Detection**: Automatic CSV encoding and delimiter detection
 - **Dockerized**: Easy deployment with Docker and Docker Compose
@@ -141,7 +142,8 @@ docker run -p 8501:8501 --env-file .env universal-column-mapper
 ### 6. Export Results
 - Download mapping configuration as JSON
 - Export complete field configuration for reuse
-- Use mappings for automated data processing pipelines Download the mapping configuration as JSON
+- **Download final mapped dataset** in Excel or CSV format
+- Data quality insights and completeness metrics Download the mapping configuration as JSON
 - Use the mapping for data processing pipelines
 
 ## 🏗️ Architecture
@@ -411,6 +413,23 @@ Row 4: [ABC Corp, USA, 123 Main St, 12345, New York, john@abc.com]
 }
 ```
 
+### Final Mapped Dataset Export
+
+#### Excel Output (.xlsx)
+```
+| Company Name | Country | City   | Full Address      | Tax Identifier |
+|--------------|---------|--------|-------------------|----------------|
+| ABC Corp     | España  | Madrid | Calle Mayor 123   | B12345678      |
+| XYZ Firma    | Francia | París  | Rue de la Paix 45 | FR987654321    |
+```
+
+#### CSV Output (.csv)
+```csv
+Company Name,Country,City,Full Address,Tax Identifier
+ABC Corp,España,Madrid,Calle Mayor 123,B12345678
+XYZ Firma,Francia,París,Rue de la Paix 45,FR987654321
+```
+
 ## 🤝 Contributing
 
 1. Fork the repository
@@ -437,6 +456,12 @@ Built with ❤️ using Streamlit, Azure OpenAI, and modern data processing tech
 
 ## 🔄 Recent Updates
 
+### Version 2.1 Features
+- ✅ **Dataset Export**: Download final mapped data in Excel/CSV format
+- ✅ **Data Quality Insights**: Completeness metrics and quality warnings
+- ✅ **Enhanced Preview**: Rich data preview with summary statistics
+- ✅ **Auto-formatting**: Excel exports with styled headers and auto-sized columns
+
 ### Version 2.0 Features
 - ✅ **Multi-format Support**: Added CSV file processing
 - ✅ **Custom Fields**: Dynamic field configuration
@@ -452,3 +477,4 @@ Built with ❤️ using Streamlit, Azure OpenAI, and modern data processing tech
 - 🔄 **API Integration**: RESTful API for automated workflows  
 - 🔄 **Advanced Validation**: Data quality checks and suggestions
 - 🔄 **Template Library**: Community-shared field templates
+- 🔄 **Data Transformation**: Built-in data cleaning and formatting
