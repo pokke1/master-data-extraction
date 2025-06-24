@@ -1,0 +1,84 @@
+{
+  "configurations": {
+    "international_customers": {
+      "name": "International Customer Data",
+      "description": "Configuration for processing international customer databases",
+      "fields": {
+        "Company Name": "Official name of the company or business entity",
+        "Country": "Country name, ISO code, or country abbreviation",
+        "Region": "State, province, region, or administrative division",
+        "City": "City, town, or municipality name",
+        "Postal Code": "ZIP code, postal code, or similar location identifier",
+        "Street Address": "Complete street address including number and street name",
+        "VAT Number": "VAT registration number, tax ID, or fiscal identifier",
+        "Phone": "Primary contact phone number (any format)",
+        "Email": "Primary contact email address",
+        "Industry": "Business sector, industry type, or classification"
+      }
+    },
+    "ecommerce_orders": {
+      "name": "E-commerce Order Data",
+      "description": "Configuration for processing online store order information",
+      "fields": {
+        "Order ID": "Unique order identifier or order number",
+        "Customer Name": "Customer full name or business name",
+        "Product Name": "Name or title of the ordered product",
+        "SKU": "Stock keeping unit, product code, or item number",
+        "Quantity": "Number of items ordered",
+        "Unit Price": "Price per individual item",
+        "Total Amount": "Total order value or amount",
+        "Order Date": "Date when the order was placed",
+        "Status": "Order status (pending, shipped, delivered, etc.)",
+        "Shipping Address": "Complete delivery address"
+      }
+    },
+    "employee_records": {
+      "name": "Employee Records",
+      "description": "Configuration for HR and employee management systems",
+      "fields": {
+        "Employee ID": "Unique employee identifier or badge number",
+        "Full Name": "Employee's complete name (first and last)",
+        "Department": "Department, division, or team name",
+        "Job Title": "Position, role, or job designation",
+        "Start Date": "Employment start date or hire date",
+        "Email": "Corporate email address",
+        "Manager": "Direct supervisor or manager name",
+        "Salary": "Annual salary, wage, or compensation amount",
+        "Location": "Office location, branch, or work site",
+        "Status": "Employment status (active, inactive, terminated)"
+      }
+    },
+    "financial_transactions": {
+      "name": "Financial Transactions",
+      "description": "Configuration for accounting and financial data processing",
+      "fields": {
+        "Transaction ID": "Unique transaction identifier or reference number",
+        "Date": "Transaction date",
+        "Amount": "Transaction amount or value",
+        "Currency": "Currency code or symbol",
+        "Account": "Account number or account identifier",
+        "Description": "Transaction description or memo",
+        "Category": "Transaction category or type",
+        "Counterparty": "Other party involved in the transaction",
+        "Reference": "External reference number or invoice number",
+        "Status": "Transaction status (pending, completed, failed)"
+      }
+    },
+    "inventory_management": {
+      "name": "Inventory Management",
+      "description": "Configuration for warehouse and inventory systems",
+      "fields": {
+        "Item Code": "Product SKU, item number, or inventory code",
+        "Product Name": "Product title or description",
+        "Category": "Product category or classification",
+        "Supplier": "Vendor or supplier name",
+        "Quantity": "Current stock quantity",
+        "Unit Cost": "Cost per unit or item",
+        "Location": "Warehouse location, shelf, or bin number",
+        "Reorder Level": "Minimum stock level before reordering",
+        "Last Updated": "Date of last inventory update",
+        "Status": "Item status (active, discontinued, out of stock)"
+      }
+    }
+  }
+}
